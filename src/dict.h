@@ -29,25 +29,32 @@
 typedef struct dictEntry dictEntry; /* opaque */
 typedef struct dict dict;
 
+/**
+ * 字典特定类型函数
+ */
 typedef struct dictType {
     /* Callbacks */
+    // 计算哈希值的函数
     uint64_t (*hashFunction)(const void *key);
+    // 复制键的函数
     void *(*keyDup)(dict *d, const void *key);
+    // 复制值的函数
     void *(*valDup)(dict *d, const void *obj);
+    // 键比较函数
     int (*keyCompare)(dict *d, const void *key1, const void *key2);
+    // 键析构函数
     void (*keyDestructor)(dict *d, void *key);
+    // 值析构函数
     void (*valDestructor)(dict *d, void *obj);
     int (*resizeAllowed)(size_t moreMem, double usedRatio);
-    /* Invoked at the start of dict initialization/rehashing (old and new ht are already created) */
+    // 在字典初始化和rehash开始时触发
     void (*rehashingStarted)(dict *d);
-    /* Invoked at the end of dict initialization/rehashing of all the entries from old to new ht. Both ht still exists
-     * and are cleaned up after this callback.  */
+    // 在字典初始化和rehash结束调用，此时所有的实体都从旧到新，两个ht均存在，并在此之后被清除
     void (*rehashingCompleted)(dict *d);
-    /* Allow a dict to carry extra caller-defined metadata. The
-     * extra memory is initialized to 0 when a dict is allocated. */
+    // 允许一个字段携带额外用户定义的元信息，额外的内存在一个字典被分配时初始化为0
     size_t (*dictMetadataBytes)(dict *d);
 
-    /* Data */
+    // 数据
     void *userdata;
 
     /* Flags */

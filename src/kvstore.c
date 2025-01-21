@@ -27,6 +27,13 @@
 
 #define UNUSED(V) ((void) V)
 
+/**
+ * 基于索引的kv存储实现，由dict数组组成的KV存储。
+ * 此键值存储的目的是可以轻松访问属于同一个dict中的所有键。
+ *
+ * 例如，当Redis在集群模式下运行时，我们使用kv存储将映射到同一个哈希槽的所有键保存在kvs结构中的单独字典中。
+ * 这使我们能够轻松访问映射到特定哈希槽的所有键。
+ */
 struct _kvstore {
     int flags;
     dictType dtype;

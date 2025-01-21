@@ -2191,6 +2191,11 @@ void hsetnxCommand(client *c) {
     server.dirty++;
 }
 
+/**
+ * HSET 命令执行函数
+ *
+ * @param c
+ */
 void hsetCommand(client *c) {
     int i, created = 0;
     robj *o;
@@ -2353,6 +2358,11 @@ static GetFieldRes addHashFieldToReply(client *c, robj *o, sds field, int hfeFla
     return res;
 }
 
+/**
+ * HGET 命名执行函数
+ *
+ * @param c
+ */
 void hgetCommand(client *c) {
     robj *o;
 
@@ -2541,6 +2551,11 @@ void hvalsCommand(client *c) {
     genericHgetallCommand(c,OBJ_HASH_VALUE);
 }
 
+/**
+ * HGETALL 命令执行函数
+ *
+ * @param c
+ */
 void hgetallCommand(client *c) {
     genericHgetallCommand(c,OBJ_HASH_KEY|OBJ_HASH_VALUE);
 }

@@ -605,22 +605,33 @@ typedef enum {
 #define OOM_SCORE_RELATIVE 1
 #define OOM_SCORE_ADJ_ABSOLUTE 2
 
-/* Redis maxmemory strategies. Instead of using just incremental number
- * for this defines, we use a set of flags so that testing for certain
- * properties common to multiple policies is faster. */
+/*
+ * Redis 内存策略，使用一组标志来定义，而不是仅仅使用增量数字，以便更快地测试多个策略共有的属性
+ */
+// 0000 0001 逐出最近访问时最少使用的键
 #define MAXMEMORY_FLAG_LRU (1<<0)
+// 0000 0010 逐出最不常用的键
 #define MAXMEMORY_FLAG_LFU (1<<1)
+// 0000 0100 应用于所有的键
 #define MAXMEMORY_FLAG_ALLKEYS (1<<2)
 #define MAXMEMORY_FLAG_NO_SHARED_INTEGERS \
-    (MAXMEMORY_FLAG_LRU|MAXMEMORY_FLAG_LFU)
+ (MAXMEMORY_FLAG_LRU|MAXMEMORY_FLAG_LFU)
 
+// 0000 0000 0000 0001
 #define MAXMEMORY_VOLATILE_LRU ((0<<8)|MAXMEMORY_FLAG_LRU)
+// 0000 0001 0000 0010
 #define MAXMEMORY_VOLATILE_LFU ((1<<8)|MAXMEMORY_FLAG_LFU)
+// 0000 0010 0000 0000
 #define MAXMEMORY_VOLATILE_TTL (2<<8)
+// 0000 0011 0000 0000
 #define MAXMEMORY_VOLATILE_RANDOM (3<<8)
+// 0000 0100 0000 0101
 #define MAXMEMORY_ALLKEYS_LRU ((4<<8)|MAXMEMORY_FLAG_LRU|MAXMEMORY_FLAG_ALLKEYS)
+// 0000 0101 0000 0110
 #define MAXMEMORY_ALLKEYS_LFU ((5<<8)|MAXMEMORY_FLAG_LFU|MAXMEMORY_FLAG_ALLKEYS)
+// 0000 0110 0000 0100
 #define MAXMEMORY_ALLKEYS_RANDOM ((6<<8)|MAXMEMORY_FLAG_ALLKEYS)
+// 0000 0111 0000 0000
 #define MAXMEMORY_NO_EVICTION (7<<8)
 
 /* Units */
@@ -753,6 +764,9 @@ typedef enum {
 /* A redis object, that is a type able to hold a string / list / set */
 
 /* The actual Redis Object */
+/*
+ * 实际的Redi对象
+ */
 #define OBJ_STRING 0    /* String object. */
 #define OBJ_LIST 1      /* List object. */
 #define OBJ_SET 2       /* Set object. */
@@ -943,18 +957,37 @@ struct RedisModuleDigest {
 /* Objects encoding. Some kind of objects like Strings and Hashes can be
  * internally represented in multiple ways. The 'encoding' field of the object
  * is set to one of this fields for this object. */
+
+/*
+ * 对象编码，像是String和Hash这些类型可以以多种方式在内部表示。
+ *
+ * 对象上的encoding字段设置为此对象的其中一个字段。
+ */
+// 原始格式
 #define OBJ_ENCODING_RAW 0     /* Raw representation */
+// 编码为 int
 #define OBJ_ENCODING_INT 1     /* Encoded as integer */
+// 编码为 hash table
 #define OBJ_ENCODING_HT 2      /* Encoded as hash table */
+// 不再使用的旧的编码 hash
 #define OBJ_ENCODING_ZIPMAP 3  /* No longer used: old hash encoding. */
+// 不再使用的旧的编码 list
 #define OBJ_ENCODING_LINKEDLIST 4 /* No longer used: old list encoding. */
+// 不再使用的旧的编码 list/hash/zset
 #define OBJ_ENCODING_ZIPLIST 5 /* No longer used: old list/hash/zset encoding. */
+// 编码为 inset
 #define OBJ_ENCODING_INTSET 6  /* Encoded as intset */
+// 编码为 skiplist
 #define OBJ_ENCODING_SKIPLIST 7  /* Encoded as skiplist */
+// 内置的 sds string 编码
 #define OBJ_ENCODING_EMBSTR 8  /* Embedded sds string encoding */
+// 内置的 linked list 的 listpack
 #define OBJ_ENCODING_QUICKLIST 9 /* Encoded as linked list of listpacks */
+// 内置的 radix tree 的 listpack
 #define OBJ_ENCODING_STREAM 10 /* Encoded as a radix tree of listpacks */
+// 编码为 listpack
 #define OBJ_ENCODING_LISTPACK 11 /* Encoded as a listpack */
+// 编码为 listpack，再次基础上扩展了元数据
 #define OBJ_ENCODING_LISTPACK_EX 12 /* Encoded as listpack, extended with metadata */
 
 #define LRU_BITS 24
@@ -964,13 +997,43 @@ struct RedisModuleDigest {
 #define OBJ_SHARED_REFCOUNT INT_MAX     /* Global object never destroyed. */
 #define OBJ_STATIC_REFCOUNT (INT_MAX-1) /* Object allocated in the stack. */
 #define OBJ_FIRST_SPECIAL_REFCOUNT OBJ_STATIC_REFCOUNT
+
+/**
+ * Redis对象
+ */
 struct redisObject {
+
+    /*
+     *
+     */
     unsigned type:4;
+    /*
+     * unsigned --> unsigned int
+     *
+     * OBJ_ENCODING_RAW
+     * OBJ_ENCODING_INT
+     * OBJ_ENCODING_HT
+     * OBJ_ENCODING_INTSET
+     * OBJ_ENCODING_SKIPLIST
+     * OBJ_ENCODING_EMBSTR
+     * OBJ_ENCODING_QUICKLIST
+     * OBJ_ENCODING_STREAM
+     * OBJ_ENCODING_LISTPACK
+     * OBJ_ENCODING_LISTPACK_EX
+     */
     unsigned encoding:4;
     unsigned lru:LRU_BITS; /* LRU time (relative to global lru_clock) or
                             * LFU data (least significant 8 bits frequency
                             * and most significant 16 bits access time). */
+
+    /*
+     * 该RedisObject被引用的数量，如果超过1，代表该对象是共享的，
+     * 对于共享的对象，不会被编码
+     */
     int refcount;
+    /**
+     * 范型类型，考虑到用户可以输入任何字符，因此此处不加限制
+     */
     void *ptr;
 };
 
@@ -1029,19 +1092,57 @@ typedef struct replBufBlock {
 /* Redis database representation. There are multiple databases identified
  * by integers from 0 (the default database) up to the max configured
  * database. The database number is the 'id' field in the structure. */
+
+/**
+ * 代表Redis数据库，存在多个数据库被标识，从0到配置的最大值。
+ * 数据库标识是以id保存在该结构中
+ */
 typedef struct redisDb {
+    /**
+     * 用于该数据库的键空间，作为元数据，保存键大小的直方图
+     */
     kvstore *keys;              /* The keyspace for this DB. As metadata, holds keysizes histogram */
+    /**
+     * 设置了超时的键的超时
+     */
     kvstore *expires;           /* Timeout of keys with a timeout set */
+    /**
+     * 哈希过期DS，每个哈希都有一个TTL（下一个最短过期字段）
+     */
     ebuckets hexpires;          /* Hash expiration DS. Single TTL per hash (of next min field to expire) */
+    /**
+     * 客户端正在等待数据的键（BLPOP）
+     */
     dict *blocking_keys;        /* Keys with clients waiting for data (BLPOP)*/
+    /**
+     * 客户端正在等待数据的键，如果键被删除（XREADGROUP），则应解除阻塞，这是blocking_keys的子集
+     */
     dict *blocking_keys_unblock_on_nokey;   /* Keys with clients waiting for
                                              * data, and should be unblocked if key is deleted (XREADEDGROUP).
                                              * This is a subset of blocking_keys*/
+    /**
+     * 收到PUSH被阻塞的键
+     */
     dict *ready_keys;           /* Blocked keys that received a PUSH */
+    /**
+     * 用于MUTLI/EXEC原子命令的观察键集合
+     */
     dict *watched_keys;         /* WATCHED keys for MULTI/EXEC CAS */
+    /**
+     * 数据库ID，默认为0
+     */
     int id;                     /* Database ID */
+    /**
+     * 用于统计的平均过期时间
+     */
     long long avg_ttl;          /* Average TTL, just for stats */
+    /**
+     * 活动过期周期的游标
+     */
     unsigned long expires_cursor; /* Cursor of the active expire cycle. */
+    /**
+     * 列举出要逐步尝试逐一进行碎片整理的关键名称列表
+     */
     list *defrag_later;         /* List of key names to attempt to defrag one by one, gradually. */
 } redisDb;
 
@@ -1235,24 +1336,90 @@ typedef struct {
 } clientReqResInfo;
 #endif
 
+/**
+ * @chinese 代表客户端的请求
+ */
 typedef struct client {
+    /**
+     * 客户端自增唯一ID，无符号的64位整数
+     */
     uint64_t id;            /* Client incremental unique ID. */
+    /**
+     * 客户端标识，无符号的64位整数
+     */
     uint64_t flags;         /* Client flags: CLIENT_* macros. */
+    /**
+     * 客户端连接
+     */
     connection *conn;
+    /**
+     * 此客户端绑定的线程分配ID，无符号的8位整数
+     */
     uint8_t tid;            /* Thread assigned ID this client is bound to. */
+    /**
+     * 此客户端正在运行的线程分配ID，无符号的8位整数
+     */
     uint8_t running_tid;    /* Thread assigned ID this client is running on. */
+    /**
+     * 可由主线程和IO线程访问，但不能同时修改，无符号8位整数
+     */
     uint8_t io_flags;       /* Accessed by both main and IO threads, but not modified concurrently */
+    /**
+     * 客户端读错误，无符号8位整数
+     */
     uint8_t read_error;     /* Client read error: CLIENT_READ_* macros. */
+    /**
+     * RESP协议版本，整数
+     */
     int resp;               /* RESP protocol version. Can be 2 or 3. */
+    /**
+     * 指向当前选择的数据库的指针
+     */
     redisDb *db;            /* Pointer to currently SELECTed DB. */
+    /**
+     * 指向客户端名称设置的指针
+     */
     robj *name;             /* As set by CLIENT SETNAME. */
+    /**
+     * 指向由CLIENT SETINFO设置的客户库的指针
+     */
     robj *lib_name;         /* The client library name as set by CLIENT SETINFO. */
+    /**
+     * 指向由CLIENT SETINFO设置的客户端库的版本
+     */
     robj *lib_ver;          /* The client library version as set by CLIENT SETINFO. */
+    /**
+     * 保存了用户发送的命令信息，其格式为：
+     * 命令整体的数量
+     * 第一条命令的长度
+     * 第一条命令的内容
+     * 第二条命令的长度
+     * 第二条命令的内容
+     *
+     * <example>
+     *  $ get name
+     *
+     *  *2
+     *  $3
+     *  get
+     *  $4
+     *  name
+     * </example>
+     */
     sds querybuf;           /* Buffer we use to accumulate client queries. */
     size_t qb_pos;          /* The position we have read in querybuf. */
     size_t querybuf_peak;   /* Recent (100ms or more) peak of querybuf size. */
+    /**
+     * 当前命令的参数数量
+     */
     int argc;               /* Num of arguments of current command. */
+    /**
+     * 当前命令的参数列表
+     */
     robj **argv;            /* Arguments of current command. */
+    /**
+     * 参数数组的大小
+     */
     int argv_len;           /* Size of argv array (may be more than argc) */
     int original_argc;      /* Num of arguments of original command if arguments were rewritten. */
     robj **original_argv;   /* Arguments of original command if arguments were rewritten. */
@@ -2044,9 +2211,21 @@ struct redisServer {
     list *clients_waiting_acks;         /* Clients waiting in WAIT or WAITAOF. */
     int get_ack_from_slaves;            /* If true we send REPLCONF GETACK. */
     /* Limits */
+    /*
+     * 最大同时客户端数
+     */
     unsigned int maxclients;            /* Max number of simultaneous clients */
+    /*
+     * 可使用的最大内存字数
+     */
     unsigned long long maxmemory;   /* Max number of memory bytes to use */
+    /**
+     * 总客户端缓冲内存限制
+     */
     ssize_t maxmemory_clients;       /* Memory limit for total client buffers */
+    /**
+     * 键过期策略
+     */
     int maxmemory_policy;           /* Policy for key eviction */
     int maxmemory_samples;          /* Precision of random sampling */
     int maxmemory_eviction_tenacity;/* Aggressiveness of eviction processing */
@@ -2951,6 +3130,9 @@ int collateStringObjects(const robj *a, const robj *b);
 int equalStringObjects(robj *a, robj *b);
 unsigned long long estimateObjectIdleTime(robj *o);
 void trimStringObjectIfNeeded(robj *o, int trim_small_values);
+/*
+ * 检查类型必须为 Raw 或 Embstr 编码
+ */
 #define sdsEncodedObject(objptr) (objptr->encoding == OBJ_ENCODING_RAW || objptr->encoding == OBJ_ENCODING_EMBSTR)
 
 /* Synchronous I/O with timeout */
@@ -3435,19 +3617,29 @@ sds keyspaceEventsFlagsToString(int flags);
 #define PERCENT_CONFIG (1<<1) /* Indicates if this value can be loaded as a percent (and stored as a negative int) */
 #define OCTAL_CONFIG (1<<2) /* This value uses octal representation */
 
-/* Enum Configs contain an array of configEnum objects that match a string with an integer. */
+/**
+ * 包含一个与整数匹配的字符串的configEnum对象数组的枚举配置
+ */
 typedef struct configEnum {
     char *name;
     int val;
 } configEnum;
 
-/* Type of configuration. */
+/**
+ * 配置类型
+ */
 typedef enum {
+    // 布尔
     BOOL_CONFIG,
+    // 数组
     NUMERIC_CONFIG,
+    // 字符串
     STRING_CONFIG,
+    // Simple Dynamic Strings 配置
     SDS_CONFIG,
+    // 枚举配置
     ENUM_CONFIG,
+    // 特殊配置
     SPECIAL_CONFIG,
 } configType;
 
@@ -3507,12 +3699,24 @@ robj *objectCommandLookup(client *c, robj *key);
 robj *objectCommandLookupOrReply(client *c, robj *key, robj *reply);
 int objectSetLRUOrLFU(robj *val, long long lfu_freq, long long lru_idle,
                        long long lru_clock, int lru_multiplier);
+
+/**
+ * LOOKUP 相关标识
+ *
+ *
+ */
 #define LOOKUP_NONE 0
+// 不更新LRU
 #define LOOKUP_NOTOUCH (1<<0)        /* Don't update LRU. */
+// 在key不存在时不触发键空间事件
 #define LOOKUP_NONOTIFY (1<<1)       /* Don't trigger keyspace event on key misses. */
+// 不会更新key的命中和丢失计数器
 #define LOOKUP_NOSTATS (1<<2)        /* Don't update keyspace hits/misses counters. */
+// 删除过期的key，即使是在Slave
 #define LOOKUP_WRITE (1<<3)          /* Delete expired keys even in replicas. */
+// 避免删除懒过期的键
 #define LOOKUP_NOEXPIRE (1<<4)       /* Avoid deleting lazy expired keys. */
+//
 #define LOOKUP_ACCESS_EXPIRED (1<<5) /* Allow lookup to expired key. */
 #define LOOKUP_NOEFFECTS (LOOKUP_NONOTIFY | LOOKUP_NOSTATS | LOOKUP_NOTOUCH | LOOKUP_NOEXPIRE) /* Avoid any effects from fetching the key */
 

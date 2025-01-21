@@ -469,54 +469,64 @@ err:
     return 0;
 }
 
-/* Convert a string into a long long. Returns 1 if the string could be parsed
- * into a (non-overflowing) long long, 0 otherwise. The value will be set to
- * the parsed value when appropriate.
+/**
+ * 将string转换为long long，如果string可以被解析为long long，则返回1，否则返回0。
+ * 在适当的时候，长度被设置到*value中。
  *
- * Note that this function demands that the string strictly represents
- * a long long: no spaces or other characters before or after the string
- * representing the number are accepted, nor zeroes at the start if not
- * for the string "0" representing the zero number.
+ * 请注意，此函数要求字符串严格表示一个long long：表示数字的string之前或之后不接受任何空格或其他字符，
+ * 如果不是表示0的字符串0，则开头也不接受0。
  *
- * Because of its strictness, it is safe to use this function to check if
- * you can convert a string into a long long, and obtain back the string
- * from the number without any loss in the string representation. */
+ * 由于其严格性，可以安全地使用此函数来检查是否可以将字符串转换为long long，并从数字中获取字符串，
+ * 而不会在字符串表示中造成任何损失。
+ *
+ * @param s
+ * @param slen 字符串长度
+ * @param value
+ */
 int string2ll(const char *s, size_t slen, long long *value) {
     const char *p = s;
     size_t plen = 0;
     int negative = 0;
     unsigned long long v;
 
-    /* A string of zero length or excessive length is not a valid number. */
+    /* 长度为0，或超过21的字符串不是有效数字，直接返回0 */
     if (plen == slen || slen >= LONG_STR_SIZE)
         return 0;
 
-    /* Special case: first and only digit is 0. */
+    /* 仅有一位，并且首位是0 */
     if (slen == 1 && p[0] == '0') {
+        /* 值不为空，但是长度为0，直接返回0 */
         if (value != NULL) *value = 0;
+        /* 值为空，对应首位长度为0，返回1 */
         return 1;
     }
 
     /* Handle negative numbers: just set a flag and continue like if it
      * was a positive number. Later convert into negative. */
+    /* 处理首位负数：只需设置一个标志，然后继续处理 */
     if (p[0] == '-') {
+        // 处理负数的场景
         negative = 1;
         p++; plen++;
 
-        /* Abort on only a negative sign. */
+        // 仅当出现负号时才中止，直接返回0
         if (plen == slen)
             return 0;
     }
 
-    /* First digit should be 1-9, otherwise the string should just be 0. */
+    /* 首位应该是1-9，否则字符串应该是0 */
     if (p[0] >= '1' && p[0] <= '9') {
+        /* 将char转换为int */
         v = p[0]-'0';
         p++; plen++;
     } else {
+        // 首位非1-9，直接返回0
         return 0;
     }
 
     /* Parse all the other digits, checking for overflow at every step. */
+
+    /* 解析所有其他数字，检查每一步是否溢出 */
     while (plen < slen && p[0] >= '0' && p[0] <= '9') {
         if (v > (ULLONG_MAX / 10)) /* Overflow. */
             return 0;
@@ -567,18 +577,27 @@ int string2ull(const char *s, unsigned long long *value) {
     return 1; /* Conversion done! */
 }
 
-/* Convert a string into a long. Returns 1 if the string could be parsed into a
- * (non-overflowing) long, 0 otherwise. The value will be set to the parsed
- * value when appropriate. */
+/*
+ * 将String转换为long，如果string可以解析为（非溢出）长整型，则返回1，否则返回0。
+ * 在适当的时候，该值将被设置为解析后的值。
+ *
+ * @param s 原始字符串的指针
+ * @param slen 用于保存字符串长度的字段
+ * @param lval
+ * @return
+ */
 int string2l(const char *s, size_t slen, long *lval) {
     long long llval;
 
-    if (!string2ll(s,slen,&llval))
+    // 如果无法转换为long long，直接返回0
+    if (!string2ll(s, slen, &llval))
         return 0;
 
+    // 如果解析长度<-1，或大于最大值，直接返回0
     if (llval < LONG_MIN || llval > LONG_MAX)
         return 0;
 
+    // 将解析的值保存到变量中
     *lval = (long)llval;
     return 1;
 }

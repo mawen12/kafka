@@ -34,14 +34,45 @@ typedef struct deprecatedConfig {
     const int argc_max;
 } deprecatedConfig;
 
+/**
+ * 键过期策略，即当Redis缓存内存不足时，可以将其安全租出的策略。
+ * 当缓存的大小超出设置的内存限制时，Redis可以根据指定的策略对键进行过期，直到内存低于阈值。
+ * 该枚举配合redisService#maxmemory一起使用。
+ */
 configEnum maxmemory_policy_enum[] = {
+    /*
+     * 仅对expire=true且距离上次访问最少使用的键逐出
+     */
     {"volatile-lru", MAXMEMORY_VOLATILE_LRU},
+    /*
+     * 仅对expire=true且最不常用的键逐出
+     */
     {"volatile-lfu", MAXMEMORY_VOLATILE_LFU},
+    /*
+     * 仅对expire=true的键随机逐出
+     */
     {"volatile-random",MAXMEMORY_VOLATILE_RANDOM},
+    /*
+     * 仅对expire=true且ttl剩余最短的键逐出
+     */
     {"volatile-ttl",MAXMEMORY_VOLATILE_TTL},
+    /*
+     * 从所有键中将最近最少使用的键逐出
+     */
     {"allkeys-lru",MAXMEMORY_ALLKEYS_LRU},
+    /*
+     * 从所有键中将最不常用的键逐出
+     */
     {"allkeys-lfu",MAXMEMORY_ALLKEYS_LFU},
+    /*
+     * 从所有键中随机逐出
+     */
     {"allkeys-random",MAXMEMORY_ALLKEYS_RANDOM},
+    /*
+     * key不会被逐出，但是当向服务器缓存新的数据时，服务器将返回错误。
+     * 该配置仅适用于集群中的主数据库。
+     * 不会影响读取。
+     */
     {"noeviction",MAXMEMORY_NO_EVICTION},
     {NULL, 0}
 };
@@ -76,6 +107,9 @@ configEnum supervised_mode_enum[] = {
     {NULL, 0}
 };
 
+/*
+ * aof 异步配置枚举
+ */
 configEnum aof_fsync_enum[] = {
     {"everysec", AOF_FSYNC_EVERYSEC},
     {"always", AOF_FSYNC_ALWAYS},

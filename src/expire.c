@@ -759,11 +759,17 @@ void pexpireatCommand(client *c) {
     expireGenericCommand(c,0,UNIT_MILLISECONDS);
 }
 
-/* Implements TTL, PTTL, EXPIRETIME and PEXPIRETIME */
+/**
+ * 实现了 TTL, PTTL, EXPIRETIME, PEXPIRETIME 命令
+ *
+ * @param c 客户端
+ * @param output_ms
+ * @param output_abs
+ */
 void ttlGenericCommand(client *c, int output_ms, int output_abs) {
     long long expire, ttl = -1;
 
-    /* If the key does not exist at all, return -2 */
+    // 从指定的db中检查指定的key是否存在，如果不存在，返回-2
     if (lookupKeyReadWithFlags(c->db,c->argv[1],LOOKUP_NOTOUCH) == NULL) {
         addReplyLongLong(c,-2);
         return;
@@ -783,7 +789,12 @@ void ttlGenericCommand(client *c, int output_ms, int output_abs) {
     }
 }
 
-/* TTL key */
+/**
+ * TTL 命令，语法：
+ * TTL key
+ *
+ * @param c
+ */
 void ttlCommand(client *c) {
     ttlGenericCommand(c, 0, 0);
 }

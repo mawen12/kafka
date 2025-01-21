@@ -257,21 +257,26 @@ dictEntry *dbAdd(redisDb *db, robj *key, robj *val) {
     return dbAddInternal(db, key, val, 0);
 }
 
-/* Returns key's hash slot when cluster mode is enabled, or 0 when disabled.
- * The only difference between this function and getKeySlot, is that it's not using cached key slot from the current_client
- * and always calculates CRC hash.
- * This is useful when slot needs to be calculated for a key that user didn't request for, such as in case of eviction. */
+/**
+ * 该方法与getKeySlot的唯一区别在于，它不使用来自于当前客户端的缓存键槽，并且始终计算CRC哈希。
+ * 当需要为用户未请求的密钥计算槽时（例如在驱逐的情况下），这很有用
+ *
+ * @param key 键名
+ * @return 如果启用了集群模式返回键的哈希槽，否则返回0
+ */
 int calculateKeySlot(sds key) {
     return server.cluster_enabled ? keyHashSlot(key, (int) sdslen(key)) : 0;
 }
 
-/* Return slot-specific dictionary for key based on key's hash slot when cluster mode is enabled, else 0.*/
+/**
+ * @param key 键名
+ * @return 如果启用了集群模式返回键的哈希槽，否则返回0
+ */
 int getKeySlot(sds key) {
-    /* This is performance optimization that uses pre-set slot id from the current command,
-     * in order to avoid calculation of the key hash.
-     * This optimization is only used when current_client flag `CLIENT_EXECUTING_COMMAND` is set.
-     * It only gets set during the execution of command under `call` method. Other flows requesting
-     * the key slot would fallback to calculateKeySlot.
+    /**
+     * 这是性能优化，使用当前命令中预设的槽ID，以避免计算密钥哈希值。
+     * 仅在当前客户端设置CLIENT_EXECUTING_COMMAND时优化才会被启用。
+     * 仅在call方法下执行命名期间设置。请求密钥槽的其他流程将回退到calculateKeySlot
      */
     if (server.current_client && server.current_client->slot >= 0 && server.current_client->flags & CLIENT_EXECUTING_COMMAND) {
         debugServerAssertWithInfo(server.current_client, NULL, calculateKeySlot(key)==server.current_client->slot);
@@ -905,7 +910,12 @@ void flushdbCommand(client *c) {
 
 }
 
-/* This command implements DEL and UNLINK. */
+/**
+ * 该命令实现DEL和UNLINk
+ *
+ * @param c
+ * @param lazy
+ */
 void delGenericCommand(client *c, int lazy) {
     int numdel = 0, j;
 
@@ -925,6 +935,11 @@ void delGenericCommand(client *c, int lazy) {
     addReplyLongLong(c,numdel);
 }
 
+/**
+ * DEL 命令执行函数
+ *
+ * @param c
+ */
 void delCommand(client *c) {
     delGenericCommand(c,server.lazyfree_lazy_user_del);
 }
