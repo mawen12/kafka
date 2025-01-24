@@ -1579,6 +1579,9 @@ struct sentinelConfig {
     list *post_monitor_cfg;
 };
 
+/*
+ * 共享对象结构
+ */
 struct sharedObjectsStruct {
     robj *ok, *err, *emptybulk, *czero, *cone, *pong, *space,
     *queued, *null[4], *nullarray[4], *emptymap[4], *emptyset[4],

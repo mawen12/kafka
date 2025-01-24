@@ -17,6 +17,9 @@ extern const char *SDS_NOINIT;
 #include <stdarg.h>
 #include <stdint.h>
 
+/*
+ * 定义一个名为 sds 的新数据类型，它是字符指针的同义词
+ */
 typedef char *sds;
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
@@ -237,7 +240,11 @@ static inline void sdssetalloc(sds s, size_t newlen) {
     }
 }
 
+/*
+ * 创建一个新的Redis string
+ */
 sds sdsnewlen(const void *init, size_t initlen);
+
 sds sdstrynewlen(const void *init, size_t initlen);
 sds sdsnew(const char *init);
 sds sdsempty(void);

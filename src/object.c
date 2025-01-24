@@ -660,10 +660,13 @@ robj *tryObjectEncodingEx(robj *o, int try_trim) {
             !(server.maxmemory_policy & MAXMEMORY_FLAG_NO_SHARED_INTEGERS)) &&
             value >= 0 &&
             value < OBJ_SHARED_INTEGERS) {
+            // 减少该对象的引用数量
             decrRefCount(o);
+            // 返回共享的对象
             return shared.integers[value];
         } else {
             if (o->encoding == OBJ_ENCODING_RAW) {
+                //
                 sdsfree(o->ptr);
                 o->encoding = OBJ_ENCODING_INT;
                 o->ptr = (void *) value;
