@@ -32,7 +32,8 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
- * The interface for the {@link KafkaProducer}
+ * 负责生产消息的生产者
+ *
  * @see KafkaProducer
  * @see MockProducer
  */
@@ -72,21 +73,29 @@ public interface Producer<K, V> extends Closeable {
     void abortTransaction() throws ProducerFencedException;
 
     /**
+     * 异步发送消息
+     *
      * See {@link KafkaProducer#send(ProducerRecord)}
      */
     Future<RecordMetadata> send(ProducerRecord<K, V> record);
 
     /**
+     * 异步发送消息
+     *
      * See {@link KafkaProducer#send(ProducerRecord, Callback)}
      */
     Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback);
 
     /**
+     * 刷新
+     *
      * See {@link KafkaProducer#flush()}
      */
     void flush();
 
     /**
+     * 获取主题的分片列表
+     *
      * See {@link KafkaProducer#partitionsFor(String)}
      */
     List<PartitionInfo> partitionsFor(String topic);
@@ -102,11 +111,15 @@ public interface Producer<K, V> extends Closeable {
     Uuid clientInstanceId(Duration timeout);
 
     /**
+     * 关闭生产者
+     *
      * See {@link KafkaProducer#close()}
      */
     void close();
 
     /**
+     * 等待一段时间后关闭生产者
+     *
      * See {@link KafkaProducer#close(Duration)}
      */
     void close(Duration timeout);
