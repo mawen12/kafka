@@ -20,13 +20,22 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * A topic name and partition number
+ * 主题名称和分区编号
  */
 public final class TopicPartition implements Serializable {
     private static final long serialVersionUID = -613627415771699627L;
 
+    /**
+     * {@link #partition}和{@link #topic}的哈希值
+     */
     private int hash = 0;
+    /**
+     * 分区编号
+     */
     private final int partition;
+    /**
+     * 主题
+     */
     private final String topic;
 
     public TopicPartition(String topic, int partition) {

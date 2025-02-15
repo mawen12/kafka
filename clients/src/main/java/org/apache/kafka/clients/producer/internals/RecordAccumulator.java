@@ -60,11 +60,9 @@ import org.apache.kafka.common.utils.Time;
 import org.slf4j.Logger;
 
 /**
- * This class acts as a queue that accumulates records into {@link MemoryRecords}
- * instances to be sent to the server.
- * <p>
- * The accumulator uses a bounded amount of memory and append calls will block when that memory is exhausted, unless
- * this behavior is explicitly disabled.
+ * 该类充当一个队列，将记录累积到{@link MemoryRecords}实例中，然后发送到服务器。
+ *
+ * <p>累积器使用有限量的内存，当内存耗尽时，追加调用将会阻塞，除非明确禁用此行为。
  */
 public class RecordAccumulator {
 
@@ -263,10 +261,9 @@ public class RecordAccumulator {
     }
 
     /**
-     * Add a record to the accumulator, return the append result
-     * <p>
-     * The append result will contain the future metadata, and flag for whether the appended batch is full or a new batch is created
-     * <p>
+     * 将记录追加到累积器，返回追加结果。
+     *
+     * <p>追加结果将包含future元信息，以及用于标识被追加的批次已满或新批次被创建的标识
      *
      * @param topic The topic to which this record is being sent
      * @param partition The partition to which this record is being sent or RecordMetadata.UNKNOWN_PARTITION

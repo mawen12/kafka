@@ -29,8 +29,7 @@ import java.io.Closeable;
 import java.util.List;
 
 /**
- * A container that holds the list {@link org.apache.kafka.clients.producer.ProducerInterceptor}
- * and wraps calls to the chain of custom interceptors.
+ * 保存了{@link ProducerInterceptor}列表的容器，并通过自定义的拦截器包装调用。
  */
 public class ProducerInterceptors<K, V> implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(ProducerInterceptors.class);
@@ -41,15 +40,12 @@ public class ProducerInterceptors<K, V> implements Closeable {
     }
 
     /**
-     * This is called when client sends the record to KafkaProducer, before key and value gets serialized.
-     * The method calls {@link ProducerInterceptor#onSend(ProducerRecord)} method. ProducerRecord
-     * returned from the first interceptor's onSend() is passed to the second interceptor onSend(), and so on in the
-     * interceptor chain. The record returned from the last interceptor is returned from this method.
+     * 将客户端发送记录到KafkaProducer时被调用，在key和value序列化之前。
+     * 该方法内部调用{@link ProducerInterceptor#onSend(ProducerRecord)}，
+     * 方法返回的{@link ProducerRecord}会传递到后续的拦截器中。最后一个拦截器返回的记录将作为返回结果。
      *
-     * This method does not throw exceptions. Exceptions thrown by any of interceptor methods are caught and ignored.
-     * If an interceptor in the middle of the chain, that normally modifies the record, throws an exception,
-     * the next interceptor in the chain will be called with a record returned by the previous interceptor that did not
-     * throw an exception.
+     * <p>该方法不会抛出异常。任何被拦截器方法抛出的异常将被捕获并忽略。如果一个拦截器位于拦截器链中，通常是编辑请求然后抛出异常。
+     * 链上的下一个连接器会继续将前一个拦截器返回的记录作为参数，并不会抛出异常。
      *
      * @param record the record from client
      * @return producer record to send to topic/partition

@@ -112,7 +112,7 @@ public class ProducerMetadata extends Metadata {
     }
 
     /**
-     * Wait for metadata update until the current version is larger than the last version we know of
+     * 等待元数据更新，直到当前版本大于我们所知的最后的版本
      */
     public synchronized void awaitUpdate(final int lastVersion, final long timeoutMs) throws InterruptedException {
         long currentTimeMs = time.milliseconds();

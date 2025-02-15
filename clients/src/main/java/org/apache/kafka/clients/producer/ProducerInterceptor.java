@@ -18,21 +18,21 @@ package org.apache.kafka.clients.producer;
 
 import org.apache.kafka.common.Configurable;
 
+import java.util.Map;
+
 /**
- * A plugin interface that allows you to intercept (and possibly mutate) the records received by the producer before
- * they are published to the Kafka cluster.
- * <p>
- * This class will get producer config properties via <code>configure()</code> method, including clientId assigned
- * by KafkaProducer if not specified in the producer config. The interceptor implementation needs to be aware that it will be
- * sharing producer config namespace with other interceptors and serializers, and ensure that there are no conflicts.
- * <p>
- * Exceptions thrown by ProducerInterceptor methods will be caught, logged, but not propagated further. As a result, if
- * the user configures the interceptor with the wrong key and value type parameters, the producer will not throw an exception,
- * just log the errors.
- * <p>
- * ProducerInterceptor callbacks may be called from multiple threads. Interceptor implementation must ensure thread-safety, if needed.
- * <p>
- * Implement {@link org.apache.kafka.common.ClusterResourceListener} to receive cluster metadata once it's available. Please see the class documentation for ClusterResourceListener for more information.
+ * 允许用户拦截（或可能修改）被生产者接受，并在之后发送给kafka集群的插件接口。
+ *
+ * <p>该类通过{@link #configure(Map)}方法获取生产者配置属性，包含未被生产者配置，但是由KafkaProducer分配的客户端ID。
+ * 该拦截器实现需要意识到它将与其他拦截器和序列化器共享命名空间，并确保没有冲突。
+ *
+ * <p>由{@link ProducerInterceptor}抛出的异常将被捕获、日志记录并忽略。作为结果，如果用户配置的拦截器带有错误的key和value的参数类型，
+ * 生产者将不会抛出异常，而是记录错误。
+ *
+ * <p>{@link ProducerInterceptor}可以被多个线程调用，如果需要的话，其实现必须确保线程安全。
+ * 这是因为{@link ProducerInterceptor}被{@link KafkaProducer}所持有，而{@link KafkaProducer}则是有可能被多个线程调用。
+
+ * <p>实现{@link org.apache.kafka.common.ClusterResourceListener}来接受集群元数据，一旦它可用。
  */
 public interface ProducerInterceptor<K, V> extends Configurable, AutoCloseable {
     /**

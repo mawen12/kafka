@@ -31,17 +31,40 @@ import java.util.Set;
 
 /**
  * An immutable representation of a subset of the nodes, topics, and partitions in the Kafka cluster.
+ *
+ * Kafka集群中节点、主题和分区子集的不可变表示
  */
 public final class Cluster {
 
     private final boolean isBootstrapConfigured;
+    /**
+     * 集群内的所有节点
+     */
     private final List<Node> nodes;
+    /**
+     * 该集群中未授权的主题列表
+     */
     private final Set<String> unauthorizedTopics;
+    /**
+     * 该集群中非法的主题列表
+     */
     private final Set<String> invalidTopics;
+    /**
+     * 被集群内部使用的主题列表
+     */
     private final Set<String> internalTopics;
+    /**
+     * 控制器节点
+     */
     private final Node controller;
-    private final Map<TopicPartition, PartitionInfo> partitionsByTopicPartition;
-    private final Map<String, List<PartitionInfo>> partitionsByTopic;
+    /**
+     * 该集群中主题与分片的信息的映射
+     */
+    private final Map<TopicPartition/* topic and partition number */, PartitionInfo/* 分片信息 */> partitionsByTopicPartition;
+    /**
+     * 该集群下的主题与分片信息的映射
+     */
+    private final Map<String/* topic */, List<PartitionInfo>/* 主题下的分片信息 */> partitionsByTopic;
     private final Map<String, List<PartitionInfo>> availablePartitionsByTopic;
     private final Map<Integer, List<PartitionInfo>> partitionsByNode;
     private final Map<Integer, Node> nodesById;
@@ -296,7 +319,8 @@ public final class Cluster {
     }
 
     /**
-     * Get the number of partitions for the given topic.
+     * 获取指定主题的分片数
+     *
      * @param topic The topic to get the number of partitions for
      * @return The number of partitions or null if there is no corresponding metadata
      */

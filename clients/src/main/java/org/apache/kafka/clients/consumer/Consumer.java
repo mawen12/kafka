@@ -32,6 +32,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
+ * Kafka 消费者
+ *
  * @see KafkaConsumer
  * @see MockConsumer
  */

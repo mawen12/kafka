@@ -205,8 +205,8 @@ public class Metadata implements Closeable {
     }
 
     /**
-     * Request an immediate update of the current cluster metadata info, because the caller is interested in
-     * metadata that is being newly requested.
+     * 请求立即更新当前集群的元数据信息，因为调用者对新请求的元数据感兴趣。
+     *
      * @return The current updateVersion before the update
      */
     public synchronized int requestUpdateForNewTopics() {

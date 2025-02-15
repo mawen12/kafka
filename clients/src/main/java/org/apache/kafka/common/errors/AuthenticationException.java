@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.errors;
 
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
 import javax.net.ssl.SSLException;
 
 /**
@@ -31,6 +34,11 @@ import javax.net.ssl.SSLException;
  *   handshake. This could be due to misconfigured security protocol.</li>
  *   <li>{@link SslAuthenticationException} if SSL handshake failed due to any {@link SSLException}.
  * </ul>
+ *
+ * 该异常表明出现SASL授权失败。如果身份验证失败，客户端将中止请求的操作并引发此异常的子类之一:
+ *
+ * @see org.apache.kafka.clients.producer.KafkaProducer#send(ProducerRecord, Callback)
+ *
  */
 public class AuthenticationException extends ApiException {
 

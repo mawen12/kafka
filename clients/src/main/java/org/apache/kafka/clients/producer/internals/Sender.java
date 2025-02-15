@@ -923,7 +923,7 @@ public class Sender implements Runnable {
     }
 
     /**
-     * Wake up the selector associated with this send thread
+     * 唤醒与此发送线程关联的选择器
      */
     public void wakeup() {
         this.client.wakeup();

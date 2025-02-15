@@ -16,11 +16,16 @@
  */
 package org.apache.kafka.common.errors;
 
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
 /**
- * This fatal exception indicates that another producer with the same <code>transactional.id</code> has been
- * started. It is only possible to have one producer instance with a <code>transactional.id</code> at any
- * given time, and the latest one to be started "fences" the previous instances so that they can no longer
- * make transactional requests. When you encounter this exception, you must close the producer instance.
+ * 此致命异常表明另一个启动的生产者也具有相同的{@code transactional.id}。在任何时间{@code transactional.id}的值是全局唯一的，只能被一个生产者使用，
+ * 如果一个新的生产者也设置了相同的{@code transactional.id}，那么会导致该生产者不能在发送事务请求。当我们遇到此异常时，必须关闭生产者示例。
+ *
+ * <p>但是对于幂等生产者来说，出现该异常是可以忽略的。
+ *
+ * @see org.apache.kafka.clients.producer.KafkaProducer#send(ProducerRecord, Callback)
  */
 public class ProducerFencedException extends ApiException {
 

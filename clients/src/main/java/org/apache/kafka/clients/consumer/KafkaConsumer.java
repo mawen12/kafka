@@ -48,6 +48,13 @@ import java.util.regex.Pattern;
 import static org.apache.kafka.common.utils.Utils.propsToMap;
 
 /**
+ * 从kafka集群消费记录的客户端。
+ *
+ * <p>该客户端透明地处理Kafka代理的故障，并透明地适应其提取的主题分区在集群内的迁移。该客户端还与代理交互，
+ * 以允许消费者组使用consumer groups对消费进行负载均衡。
+ *
+ * <p>消费者维护TCP连接到所需的broker来获取记录。在
+ *
  * A client that consumes records from a Kafka cluster.
  * <p>
  * This client transparently handles the failure of Kafka brokers, and transparently adapts as topic partitions

@@ -16,13 +16,33 @@
  */
 package org.apache.kafka.common.record;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+
 import java.util.NoSuchElementException;
 
 /**
- * The timestamp type of the records.
+ * 记录的时间戳类型
+ *
+ * @see RecordMetadata
  */
 public enum TimestampType {
-    NO_TIMESTAMP_TYPE(-1, "NoTimestampType"), CREATE_TIME(0, "CreateTime"), LOG_APPEND_TIME(1, "LogAppendTime");
+    /**
+     * 没有时间戳，即代表{@link KafkaProducer#send(ProducerRecord)}所返回的
+     * {@link RecordMetadata#timestamp()}为空
+     */
+    NO_TIMESTAMP_TYPE(-1, "NoTimestampType"),
+
+    /**
+     * 由用户指定的时间，如果用户未提供时间，则为生产者发送消息的时间。
+     */
+    CREATE_TIME(0, "CreateTime"),
+
+    /**
+     * kafka broker在追加消息时的本地时间
+     */
+    LOG_APPEND_TIME(1, "LogAppendTime");
 
     public final int id;
     public final String name;

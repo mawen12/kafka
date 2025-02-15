@@ -20,14 +20,32 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * This is used to describe per-partition state in the MetadataResponse.
+ * 用于描述MetadataResponse中的每个分区状态
  */
 public class PartitionInfo {
+    /**
+     * 分片所属的主题
+     */
     private final String topic;
+    /**
+     * 分片标识，用数字表示
+     */
     private final int partition;
+    /**
+     * 分片所在的主节点
+     */
     private final Node leader;
+    /**
+     * 分片的副本节点列表
+     */
     private final Node[] replicas;
+    /**
+     * 从主节点正在同步的副本节点列表
+     */
     private final Node[] inSyncReplicas;
+    /**
+     * 离线的副本节点列表
+     */
     private final Node[] offlineReplicas;
 
     public PartitionInfo(String topic, int partition, Node leader, Node[] replicas, Node[] inSyncReplicas) {
