@@ -200,153 +200,118 @@ import static org.apache.kafka.common.utils.Utils.propsToMap;
  * 的交付保证，因为每条数据可能只交付一次，但在失败的情况下可能重复。
  *
  * <p>使用自动偏移量提交也可以提供"至少一次"的交付保证，但要求是，你必须在任何后续调用之前，或在{@link #close()}消费者之前，消费每次调用
- * 返回的所有数据。如果您未能做到以上任意一点
+ * 返回的所有数据。如果您未能做到以上任意一点，有可能出现提交的偏移量在消费的位置之前的情况，这有可能导致错过记录。使用手动提交偏移量的优势就是
+ * 给用户提供直接的控制何时消息被认为已消费。
  *
- * <p>
- * <b>Note: Using automatic offset commits can also give you "at-least-once" delivery, but the requirement is that
- * you must consume all data returned from each call to {@link #poll(Duration)} before any subsequent calls, or before
- * {@link #close() closing} the consumer. If you fail to do either of these, it is possible for the committed offset
- * to get ahead of the consumed position, which results in missing records. The advantage of using manual offset
- * control is that you have direct control over when a record is considered "consumed."</b>
- * <p>
- * The above example uses {@link #commitSync() commitSync} to mark all received records as committed. In some cases
- * you may wish to have even finer control over which records have been committed by specifying an offset explicitly.
- * In the example below we commit offset after we finish handling the records in each partition.
- * <p>
- * <pre>
- *     try {
- *         while(running) {
- *             ConsumerRecords&lt;String, String&gt; records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
- *             for (TopicPartition partition : records.partitions()) {
- *                 List&lt;ConsumerRecord&lt;String, String&gt;&gt; partitionRecords = records.records(partition);
- *                 for (ConsumerRecord&lt;String, String&gt; record : partitionRecords) {
- *                     System.out.println(record.offset() + &quot;: &quot; + record.value());
- *                 }
- *                 long lastOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
- *                 consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
- *             }
- *         }
- *     } finally {
- *       consumer.close();
- *     }
- * </pre>
+ * <p>以上的示例使用了{@link #commitSync()}将标记已接受的记录作为已消费。在某些场景中，你可能希望通过明确指定偏移量来来更好的控制已提交的记录。
+ * 以下示例展示了在处理完每个分片上的记录后提交偏移量。
+ * <pre>{@code
+ *  try {
+ *      while(running) {
+ *          ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
+ *          for (TopicPartition partition: records.partitions()) {
+ *              List<ConsumerRecord<String, String>> partitionRecords = records.records(partition);
+ *              for (ConsumerRecord<String, String> record: partitionRecords) {
+ *                  System.out.println(record.offset() + " : " + record.value());
+ *              }
+ *              long lastOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
+ *              // 手动提交时，提交的偏移量是下次要读取消息的偏移量，因此需要在最后处理的偏移量+1
+ *              consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
+ *          }
+ *      }
+ *  } finally {
+ *      consumer.close();
+ *  }
+ * }</pre>
  *
- * <b>Note: The committed offset should always be the offset of the next message that your application will read.</b>
- * Thus, when calling {@link #commitSync(Map) commitSync(offsets)} you should add one to the offset of the last message processed.
+ * <p>提交的偏移量应该总是你的应用要读取的下一条消息的偏移量。
+ * 因此，当调用{@link #commitSync(Map)}时，你应该在最后处理的消息的偏移量上+1.
  *
- * <h4><a name="manualassignment">Manual Partition Assignment</a></h4>
- * <p>
- * In the previous examples, we subscribed to the topics we were interested in and let Kafka dynamically assign a
- * fair share of the partitions for those topics based on the active consumers in the group. However, in
- * some cases you may need finer control over the specific partitions that are assigned. For example:
- * <p>
+ * <h4>手动分配分片</h4>
+ * <p>在之前的示例中，我们订阅了感兴趣的主题，并让kafka根据组中活跃消息者动态地为这些主题分配公平的分片配额。
+ * 然而，在某些场景中你可能需要对分配的特定分区进行更精细的控制。例如：
  * <ul>
- * <li>If the process is maintaining some kind of local state associated with that partition (like a
- * local on-disk key-value store), then it should only get records for the partition it is maintaining on disk.
- * <li>If the process itself is highly available and will be restarted if it fails (perhaps using a
- * cluster management framework like YARN, Mesos, or AWS facilities, or as part of a stream processing framework). In
- * this case there is no need for Kafka to detect the failure and reassign the partition since the consuming process
- * will be restarted on another machine.
- * </ul>
- * <p>
- * To use this mode, instead of subscribing to the topic using {@link #subscribe(Collection) subscribe}, you just call
- * {@link #assign(Collection)} with the full list of partitions that you want to consume.
- *
- * <pre>
- *     String topic = &quot;foo&quot;;
- *     TopicPartition partition0 = new TopicPartition(topic, 0);
- *     TopicPartition partition1 = new TopicPartition(topic, 1);
- *     consumer.assign(Arrays.asList(partition0, partition1));
- * </pre>
- * <p>
- * Once assigned, you can call {@link #poll(Duration) poll} in a loop, just as in the preceding examples to consume
- * records. The group that the consumer specifies is still used for committing offsets, but now the set of partitions
- * will only change with another call to {@link #assign(Collection) assign}. Manual partition assignment does
- * not use group coordination, so consumer failures will not cause assigned partitions to be rebalanced. Each consumer
- * acts independently even if it shares a groupId with another consumer. To avoid offset commit conflicts, you should
- * usually ensure that the groupId is unique for each consumer instance.
- * <p>
- * Note that it isn't possible to mix manual partition assignment (i.e. using {@link #assign(Collection) assign})
- * with dynamic partition assignment through topic subscription (i.e. using {@link #subscribe(Collection) subscribe}).
- *
- * <h4><a name="rebalancecallback">Storing Offsets Outside Kafka</h4>
- * <p>
- * The consumer application need not use Kafka's built-in offset storage, it can store offsets in a store of its own
- * choosing. The primary use case for this is allowing the application to store both the offset and the results of the
- * consumption in the same system in a way that both the results and offsets are stored atomically. This is not always
- * possible, but when it is it will make the consumption fully atomic and give "exactly once" semantics that are
- * stronger than the default "at-least once" semantics you get with Kafka's offset commit functionality.
- * <p>
- * Here are a couple of examples of this type of usage:
- * <ul>
- * <li>If the results of the consumption are being stored in a relational database, storing the offset in the database
- * as well can allow committing both the results and offset in a single transaction. Thus either the transaction will
- * succeed and the offset will be updated based on what was consumed or the result will not be stored and the offset
- * won't be updated.
- * <li>If the results are being stored in a local store it may be possible to store the offset there as well. For
- * example a search index could be built by subscribing to a particular partition and storing both the offset and the
- * indexed data together. If this is done in a way that is atomic, it is often possible to have it be the case that even
- * if a crash occurs that causes unsync'd data to be lost, whatever is left has the corresponding offset stored as well.
- * This means that in this case the indexing process that comes back having lost recent updates just resumes indexing
- * from what it has ensuring that no updates are lost.
- * </ul>
- * <p>
- * Each record comes with its own offset, so to manage your own offset you just need to do the following:
- *
- * <ul>
- * <li>Configure <code>enable.auto.commit=false</code>
- * <li>Use the offset provided with each {@link ConsumerRecord} to save your position.
- * <li>On restart restore the position of the consumer using {@link #seek(TopicPartition, long)}.
+ *     <li>如果进程正在维护与分片相关的某种本地状态（像是本地磁盘的键值存储），它应该仅需要获取其在磁盘上维护的分片的记录</li>
+ *     <li>
+ *         如果进程本身是高可用的，如果它失败了便会重启（可能使用一个集群管理框架，例如：YARN, Mesos, 或是AWS facilities, 或是流处理框架的一部分），
+ *     在这种场景中，无需kafka去承担检测故障，因为消费者进程将从另一台机器上重启然后重新分配分片。为了使用这种模式，无需使用{@link #subscribe(Collection)}
+ *     来订阅主题，而是通过{@link #assign(Collection)}并指定想要消费的分片列表来获取并消费记录。
+ *     <pre>{@code
+ *      String topic = "foo";
+ *      TopicPartition partition0 = new TopicPartition(topic, 0);
+ *      TopicPartition partition1 = new TopicPartition(topic, 1);
+ *      consumer.assign(Arrays.asList(partition0, partition1));
+ *     }</pre>
+ *     </li>
  * </ul>
  *
- * <p>
- * This type of usage is simplest when the partition assignment is also done manually (this would be likely in the
- * search index use case described above). If the partition assignment is done automatically special care is
- * needed to handle the case where partition assignments change. This can be done by providing a
- * {@link ConsumerRebalanceListener} instance in the call to {@link #subscribe(Collection, ConsumerRebalanceListener)}
- * and {@link #subscribe(Pattern, ConsumerRebalanceListener)}.
- * For example, when partitions are taken from a consumer the consumer will want to commit its offset for those partitions by
- * implementing {@link ConsumerRebalanceListener#onPartitionsRevoked(Collection)}. When partitions are assigned to a
- * consumer, the consumer will want to look up the offset for those new partitions and correctly initialize the consumer
- * to that position by implementing {@link ConsumerRebalanceListener#onPartitionsAssigned(Collection)}.
- * <p>
- * Another common use for {@link ConsumerRebalanceListener} is to flush any caches the application maintains for
- * partitions that are moved elsewhere.
+ * <p>一旦进行了分片分配，你就在循环中可以调用{@link #poll(Duration)}，像之前示例一样消费记录。消费者指定的分组仍然被用于提交偏移量。
+ * 手动分片分配不会使用组协调，因此消费者故障不会导致分配的分区重新平衡。每一个消费者行为独立，即使它与其他消费者共享同一个{@code group.id}。
+ * 为了避免偏移量提交冲突，用户应当保证每个消费者实例的{@code group.id}唯一。
  *
- * <h4>Controlling The Consumer's Position</h4>
- * <p>
- * In most use cases the consumer will simply consume records from beginning to end, periodically committing its
- * position (either automatically or manually). However Kafka allows the consumer to manually control its position,
- * moving forward or backwards in a partition at will. This means a consumer can re-consume older records, or skip to
- * the most recent records without actually consuming the intermediate records.
- * <p>
- * There are several instances where manually controlling the consumer's position can be useful.
- * <p>
- * One case is for time-sensitive record processing it may make sense for a consumer that falls far enough behind to not
- * attempt to catch up processing all records, but rather just skip to the most recent records.
- * <p>
- * Another use case is for a system that maintains local state as described in the previous section. In such a system
- * the consumer will want to initialize its position on start-up to whatever is contained in the local store. Likewise
- * if the local state is destroyed (say because the disk is lost) the state may be recreated on a new machine by
- * re-consuming all the data and recreating the state (assuming that Kafka is retaining sufficient history).
- * <p>
- * Kafka allows specifying the position using {@link #seek(TopicPartition, long)} to specify the new position. Special
- * methods for seeking to the earliest and latest offset the server maintains are also available (
- * {@link #seekToBeginning(Collection)} and {@link #seekToEnd(Collection)} respectively).
+ * <p>需要注意到，无法混合手动分区分配{@link #assign(Collection)}和与通过主题订阅动态进行分片分配{@link #subscribe(Collection)}。
  *
- * <h4>Consumption Flow Control</h4>
- * <p>
- * If a consumer is assigned multiple partitions to fetch data from, it will try to consume from all of them at the same time,
- * effectively giving these partitions the same priority for consumption. However in some cases consumers may want to
- * first focus on fetching from some subset of the assigned partitions at full speed, and only start fetching other partitions
- * when these partitions have few or no data to consume.
+ * <h4>在kafka外部存储偏移量</h4>
+ * <p>消费者无需使用kafka内建的偏移量存储，而是可以根据用户自己选择的存储来保存偏移量。
+ * 主要的使用场景就是允许应用在同一个系统中以原子的方式同时存储偏移量和消费结果。
+ * 这种场景比较少见，但当它实现时，它将使消费完全原子化，并提供恰好一次的语义，
+ * 该语义比kafka提供的至少一次更强。
  *
- * <p>
- * One of such cases is stream processing, where processor fetches from two topics and performs the join on these two streams.
- * When one of the topics is long lagging behind the other, the processor would like to pause fetching from the ahead topic
- * in order to get the lagging stream to catch up. Another example is bootstrapping upon consumer starting up where there are
- * a lot of history data to catch up, the applications usually want to get the latest data on some of the topics before consider
- * fetching other topics.
+ * <p>以下是这种用法的示例：
+ * <ul>
+ *     <li>如果计算结果被存储到关系数据库中，同时在数据库中存储偏移量可以确保计算结果和偏移量在同一个事务中。
+ *     因此无论是事务成功，并且offset会根据所消耗的内容进行更新，要么结果不会被保存，并且offset也不会被更新。</li>
+ *     <li>如果结果被保存在本地存储中，偏移量也可能同时保存在本地存储。例如搜索索引可以通过订阅特定的分片然后同时
+ *     保存偏移量和被索引的数据来被构建。如果这样做就是原子性的，这是具有可行性的，即使出现了宕机，导致未同步的数据丢失，
+ *     之前的相关偏移量仍然被存储的很好。索引进程就可以回到上次未处理的地方，继续处理。这样就确保了消息不会出现丢失。</li>
+ * </ul>
+ *
+ * <p>每条记录都带有它自己的偏移量，因此需要管理你自己的偏移量仅需要做以下步骤：
+ * <ul>
+ *     <li>配置{@code enable.auto.commit}=false</li>
+ *     <li>使用由{@link ConsumerRecord}提供的偏移量来保存你的消费记录的位置</li>
+ *     <li>在重启时使用{@link #seek(TopicPartition, long)}来恢复消费者消费位置</li>
+ * </ul>
+ *
+ * <p>当分片分配同时通过手动进行（例如上述描述的搜索索引），这种使用类型是最简单的。
+ * 如果分片分配自动分配，特殊场景就是需要处理当分片分配发生变更的情况。这种情况下可以
+ * 通过提供{@link ConsumerRebalanceListener}实例给{@link #subscribe(Collection, ConsumerRebalanceListener)}，
+ * 和{@link #subscribe(Pattern, ConsumerRebalanceListener)}。
+ * 例如：从消费者拿到的分片通过实现{@link ConsumerRebalanceListener#onPartitionsRevoked(Collection)}
+ * 来提交这些分片的offset。当某些分片被分配到一个消费者时，该消费者想要查找这些新分配的分片和通过实现
+ * {@link ConsumerRebalanceListener#onPartitionsAssigned(Collection)}来正确的初始化消费者。
+ *
+ * <p>另一个{@link ConsumerRebalanceListener}的常用示例则是刷新应用为移动到其他地方的分区维护的任何缓存。
+ *
+ * <h4>控制消费者位置</h4>
+ * <p>在大部分示例中，消费者只是简单的从头到尾的消费记录。周期性的提交它的位置（无论是手动还是自动的）。
+ * 然而kafka允许消费者手动控制它的位置，在分区中向前或向后移动。这意味着消费者可以重新消费更老的记录，
+ * 或者跳过最近的记录而无需实际消费中间的记录。
+ *
+ * <p>有几种实例可以手动控制消费者位置。
+ * <ul>
+ *     <li>消费者通过不尝试处理所有数据，而是直接跳到最近的记录的方式对于时间敏感的记录处理可能是有效的，</li>
+ *     <li>像之前描述的，系统维护本地状态。在这种系统中，消费者要在启动时初始化它的位置，无论是否被本地存储包含。
+ *     如果本地存储坏掉了（假如磁盘损坏了），通过在一台新机器上重新消费所有数据来重建状态。</li>
+ * </ul>
+ *
+ * <p>kafka允许使用{@link #seek(TopicPartition, long)}来指定新的位置。也可以通过{@link #seekToBeginning(Collection)}
+ * 和{@link #seekToEnd(Collection)}来检测kafka集群上特定offset区间的记录。
+ *
+ * <h4>消费流量控制</h4>
+ * <p>如果一个消费者从被分配多个分片获取数据，它将在同时尝试消费来自它们的所有数据。
+ * 以便以相同的优先级对给定的分片进行计算。然而在某些场景中，消费者可能想要首先关注
+ * 全速地从被分配的分片的子集拉取消息，当这些分片没有消息可消费时，才会开始拉取其他
+ * 分片的记录。
+ *
+ * <p>其中一个示例就是流处理，处理器从两个主题拉取记录，并对两个流执行join。
+ * 当其中一个主题长期落后于另一个，处理器就暂停从前面的主题获取数据，以便让
+ * 落后的流赶上来。另一个示例是在消费者启动时进行引导，其中有大量历史数据需要
+ * 赶上，应用程序通常希望在考虑获取其他主题之前获取某些主题的最新数据
+ *
+ * <p>Kafka支持动态控制消费六，通过使用{@link #pause(Collection)}来暂停
+ * 对特定已分配的分片的计算和{@link #resume(Collection)}和恢复对已分配的分片的计算。
+ * 首先对计算流的动态控制，
  *
  * <p>
  * Kafka supports dynamic controlling of consumption flows by using {@link #pause(Collection)} and {@link #resume(Collection)}
