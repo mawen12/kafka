@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.serialization;
 
+/**
+ * 支持将{@link Double}转换为{@code byte[]}。
+ */
 public class DoubleSerializer implements Serializer<Double> {
     @Override
     public byte[] serialize(String topic, Double data) {

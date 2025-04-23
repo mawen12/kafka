@@ -18,6 +18,9 @@ package org.apache.kafka.common.serialization;
 
 import org.apache.kafka.common.utils.Bytes;
 
+/**
+ * 支持将{@code byte[]}转换为{@code byte[]}。
+ */
 public class BytesSerializer implements Serializer<Bytes> {
     public byte[] serialize(String topic, Bytes data) {
         if (data == null)

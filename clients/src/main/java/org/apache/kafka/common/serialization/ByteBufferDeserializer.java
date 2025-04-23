@@ -20,6 +20,11 @@ import org.apache.kafka.common.header.Headers;
 
 import java.nio.ByteBuffer;
 
+/**
+ * 支持将{@code byte[]}转换为{@link ByteBuffer}
+ *
+ * @see ByteBufferSerializer
+ */
 public class ByteBufferDeserializer implements Deserializer<ByteBuffer> {
 
     @Override

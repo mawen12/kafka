@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.serialization;
 
+/**
+ * 支持将{@link Float}转换为{@code byte[]}。
+ */
 public class FloatSerializer implements Serializer<Float> {
     @Override
     public byte[] serialize(final String topic, final Float data) {

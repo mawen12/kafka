@@ -22,53 +22,55 @@ import java.io.Closeable;
 import java.util.Map;
 
 /**
- * An interface for converting objects to bytes.
+ * 提供从对象转换到字节数组的接口。
  *
- * A class that implements this interface is expected to have a constructor with no parameter.
- * <p>
- * Implement {@link org.apache.kafka.common.ClusterResourceListener} to receive cluster metadata once it's available. Please see the class documentation for ClusterResourceListener for more information.
+ * <p>实现该接口的类应该有一个无参构造器。
  *
- * @param <T> Type to be serialized from.
+ * <p>一旦它可用，就会去实现{@link org.apache.kafka.common.ClusterResourceListener}来接受集群元数据。
+ * 请查阅{@code ClusterResourceListener}的类描述获取更多信息。
+ *
+ * @param <T> 要转换的Java类型
  */
 public interface Serializer<T> extends Closeable {
 
     /**
-     * Configure this class.
-     * @param configs configs in key/value pairs
-     * @param isKey whether is for key or value
+     * 配置该类
+     *
+     * @param configs 以键值对形式的配置
+     * @param isKey {@code true}为键，{@code false}为值
      */
     default void configure(Map<String, ?> configs, boolean isKey) {
-        // intentionally left blank
+        // 故意留空
     }
 
     /**
-     * Convert {@code data} into a byte array.
+     * 将{@code data}转换为字节数组
      *
-     * @param topic topic associated with data
-     * @param data typed data
-     * @return serialized bytes
+     * @param topic 数据关联的主题
+     * @param data 类型化的数据
+     * @return 序列化后的字节数组
      */
     byte[] serialize(String topic, T data);
 
     /**
-     * Convert {@code data} into a byte array.
+     * 将{@code data}转换为字节数组
      *
-     * @param topic topic associated with data
-     * @param headers headers associated with the record
-     * @param data typed data
-     * @return serialized bytes
+     * @param topic 关联数据的主题
+     * @param headers 关联记录的头
+     * @param data 类型化的数据
+     * @return 序列化后的字节数组
      */
     default byte[] serialize(String topic, Headers headers, T data) {
         return serialize(topic, data);
     }
 
     /**
-     * Close this serializer.
-     * <p>
-     * This method must be idempotent as it may be called multiple times.
+     * 关闭该序列化器
+     *
+     * <p>由于可能被调用多次，因此该方法必须是幂等的。
      */
     @Override
     default void close() {
-        // intentionally left blank
+        // 故意留空
     }
 }

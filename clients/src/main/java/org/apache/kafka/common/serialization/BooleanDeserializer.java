@@ -21,6 +21,11 @@ import org.apache.kafka.common.header.Headers;
 
 import java.nio.ByteBuffer;
 
+/**
+ * 支持将{@code byte[]}转换为{@link Boolean}。
+ *
+ * @see BooleanSerializer
+ */
 public class BooleanDeserializer implements Deserializer<Boolean> {
     private static final byte TRUE = 0x01;
     private static final byte FALSE = 0x00;
@@ -54,6 +59,7 @@ public class BooleanDeserializer implements Deserializer<Boolean> {
             throw new SerializationException("Size of data received by BooleanDeserializer is not 1");
         }
 
+        // 获取首个字节
         final byte b = data.get(data.position());
         if (b == TRUE) {
             return true;

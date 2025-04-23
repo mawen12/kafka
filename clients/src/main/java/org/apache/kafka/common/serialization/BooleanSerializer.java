@@ -16,10 +16,20 @@
  */
 package org.apache.kafka.common.serialization;
 
+/**
+ * 支持将{@link Boolean}转换为{@code byte[]}。
+ */
 public class BooleanSerializer implements Serializer<Boolean> {
 
+    /**
+     * 以1代表为TRUE
+     */
     private static final byte TRUE = 0x01;
+    /**
+     * 以0代表为FALSE
+     */
     private static final byte FALSE = 0x00;
+
     @Override
     public byte[] serialize(final String topic, final Boolean data) {
         if (data == null) {

@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.serialization;
 
+/**
+ * 支持将{@link Short}转换为{@code byte[]}。
+ */
 public class ShortSerializer implements Serializer<Short> {
     public byte[] serialize(String topic, Short data) {
         if (data == null)

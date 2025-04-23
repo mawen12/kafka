@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.serialization;
 
+/**
+ * 支持将{@link Integer}转换为{@code byte[]}。
+ */
 public class IntegerSerializer implements Serializer<Integer> {
     public byte[] serialize(String topic, Integer data) {
         if (data == null)

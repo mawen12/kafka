@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.kafka.common.serialization.Serdes.ListSerde.SerializationStrategy;
 
+/**
+ * 支持将{@link List}转换为{@code byte[]}。
+ */
 public class ListSerializer<Inner> implements Serializer<List<Inner>> {
 
     final Logger log = LoggerFactory.getLogger(ListSerializer.class);

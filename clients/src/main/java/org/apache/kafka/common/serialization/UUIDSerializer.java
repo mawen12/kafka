@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
+ * 推荐在序列化前先转换为{@link String}。具体可见
+ *
  *  We are converting UUID to String before serializing. String encoding defaults to UTF8 and can be customized by setting
  *  the property key.deserializer.encoding, value.deserializer.encoding or deserializer.encoding. The first two take precedence over the last.
  */

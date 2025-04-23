@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.serialization;
 
+/**
+ * 支持将{@link Long}转换为{@code byte[]}。
+ */
 public class LongSerializer implements Serializer<Long> {
     public byte[] serialize(String topic, Long data) {
         if (data == null)
