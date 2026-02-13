@@ -1,0 +1,16 @@
+{
+    "java.import.gradle.enabled": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.format.enabled": true,
+    "java.autobuild.enabled": false,
+    "editor.formatOnSave": false,
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/build/**": true
+    },
+    "java.referencesCodeLens.enabled": false,
+    "search.exclude": {
+        "**/build": true
+    },
+    "java.jdt.ls.vmargs": "-Xmx4G"
+}
