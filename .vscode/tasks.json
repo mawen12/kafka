@@ -1,0 +1,79 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "redis: build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-j"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "redis: clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "distclean"
+            ]
+        },
+        {
+            "label": "redis: rebuild",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "distclean",
+                "&&",
+                "make",
+                "-j"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "redis: debug build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "BUILD_WITH_DEBUG=yes",
+                "-j"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "redis: run server",
+            "type": "shell",
+            "command": "./src/redis-server",
+            "dependsOn": "redis: build"
+        },
+        {
+            "label": "redis: run cli",
+            "type": "shell",
+            "command": "./src/redis-cli"
+        },
+        {
+            "label": "redis: test",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test"
+            ]
+        },
+        {
+            "label": "redis: run with config",
+            "type": "shell",
+            "command": "./src/redis-server redis.conf",
+            "dependsOn": "redis: build"
+        }
+    ]
+}

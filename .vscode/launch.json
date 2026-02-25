@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Redis Server",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/redis-server",
+            "args": ["redis.conf"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb",
+            "preLaunchTask": "redis: debug build",
+            "logging": {
+                "engineLogging": true,
+                "trace": true
+            }
+        },
+        {
+            "name": "Debug Redis CLI",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/redis-cli",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb",
+            "preLaunchTask": "redis: build",
+            "logging": {
+                "engineLogging": true,
+                "trace": true
+            }
+        },
+    ]
+}
